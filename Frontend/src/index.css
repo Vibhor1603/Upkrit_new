@@ -1,0 +1,217 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/*
+body {
+  font-family: "Montserrat Alternates", sans-serif;
+}
+
+.navbar {
+  transition: all 0.3s;
+  background-color: #074221;
+  display: flex;
+  justify-content: space-between;
+}
+.nav-item {
+  font-size: medium;
+}
+.logo-img {
+  width: 85px;
+  height: auto;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.navbar-scrolled {
+  background-color: #fff !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.hero {
+  background-color: #f4ff2773;
+  padding: 120px 0 60px;
+}
+
+.hero h1 {
+  font-size: 48px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.hero h2 {
+  color: #777;
+  margin-bottom: 30px;
+}
+
+.btn-get-started {
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: 1px;
+  display: inline-block;
+  padding: 10px 28px;
+  border-radius: 4px;
+  transition: 0.5s;
+  color: #fff;
+  background: #3498db;
+  text-decoration: none;
+}
+
+.btn-get-started:hover {
+  background: #2980b9;
+}
+
+.hero-img {
+  text-align: right;
+}
+
+section {
+  padding: 60px 0;
+  overflow: hidden;
+}
+
+.section-bg {
+  background-color: #f8f9fa;
+}
+
+.section-title {
+  text-align: center;
+  padding-bottom: 30px;
+}
+.services {
+  background-color: #f4ff2773;
+}
+.section-title h2 {
+  font-size: 32px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  position: relative;
+}
+
+.section-title h2::after {
+  content: "";
+  position: absolute;
+  display: block;
+  width: 50px;
+  height: 3px;
+  background: #3498db;
+  bottom: 0;
+  left: calc(50% - 25px);
+}
+
+.about .content h3 {
+  font-weight: 600;
+  font-size: 26px;
+}
+
+.services .icon-box {
+  padding: 30px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 29px 0 rgba(68, 88, 144, 0.12);
+  transition: all 0.3s ease-in-out;
+  text-align: center;
+}
+
+.services .icon-box:hover {
+  transform: translateY(-5px);
+}
+
+.contact .info {
+  padding: 30px;
+  background: #fff;
+  width: 100%;
+  box-shadow: 0 0 24px 0 rgba(0, 0, 0, 0.12);
+}
+
+.contact .info i {
+  font-size: 20px;
+  color: #3498db;
+  float: left;
+  width: 44px;
+  height: 44px;
+  background: #e6f7ff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50px;
+  transition: all 0.3s ease-in-out;
+}
+
+.contact .info h4 {
+  padding: 0 0 0 60px;
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.banner-img {
+  width: 80%;
+  margin-top: 30px;
+  border-radius: 10px;
+}
+
+.about-img {
+  width: 85%;
+  margin-left: 100px;
+}
+
+.contact .info p {
+  padding: 0 0 0 60px;
+  margin-bottom: 0;
+  font-size: 14px;
+  color: #777;
+}
+
+.footer-links a {
+  color: #777;
+  padding-left: 15px;
+  display: inline-block;
+  line-height: 1;
+}
+
+.footer-links a:hover {
+  color: #3498db;
+  text-decoration: none;
+}
+.footer {
+  background-color: #074221;
+}
+
+/* Animations */
+/* .animate__animated {
+  animation-duration: 1s;
+  animation-fill-mode: both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 100%, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate__fadeInUp {
+  animation-name: fadeInUp;
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translate3d(100%, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate__fadeInRight {
+  animation-name: fadeInRight;
+} */
