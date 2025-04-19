@@ -5,12 +5,12 @@ const jwt = require("jsonwebtoken");
 const JWT_SECRET = "your_secret_key"; // Use environment variables in production
 
 mongoose
-  .connect("mongodb://localhost:27017/UPKRIT", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("✅ MongoDB connected successfully"))
-  .catch((error) => console.error("❌ MongoDB connection error:", error));
+  .connect(
+    "mongodb+srv://vibhorsharmak:Avishubhi1603@cluster0.ygkeq.mongodb.net/UPKRIT?retryWrites=true&w=majority",
+    {}
+  )
+  .then(() => console.log("MongoDB connected successfully"))
+  .catch((error) => console.error("MongoDB connection error:", error));
 // Complaint Schema
 const complaintSchema = new mongoose.Schema({
   title: { type: String, trim: true },
