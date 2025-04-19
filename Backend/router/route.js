@@ -29,6 +29,6 @@ router.route("/login").post(login);
 router.route("/signup").post(signup);
 
 // Example protected route
-router.route("/protected").get(protectedRoute);
+router.route("/protected").get(authenticateToken,protectedRoute);
 
 module.exports = router;
