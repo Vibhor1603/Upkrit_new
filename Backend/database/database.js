@@ -11,6 +11,7 @@ mongoose
   )
   .then(() => console.log("MongoDB connected successfully"))
   .catch((error) => console.error("MongoDB connection error:", error));
+  
 // Complaint Schema
 const complaintSchema = new mongoose.Schema({
   title: { type: String, trim: true },
