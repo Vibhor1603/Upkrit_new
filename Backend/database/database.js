@@ -5,13 +5,12 @@ const jwt = require("jsonwebtoken");
 const JWT_SECRET = "your_secret_key"; // Use environment variables in production
 
 mongoose
-  .connect(
-    "mongodb+srv://vibhorsharmak:Avishubhi1603@cluster0.ygkeq.mongodb.net/UPKRIT?retryWrites=true&w=majority",
-    {}
-  )
-  .then(() => console.log("MongoDB connected successfully"))
-  .catch((error) => console.error("MongoDB connection error:", error));
-
+  .connect("mongodb://localhost:27017/UPKRIT", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("✅ MongoDB connected successfully"))
+  .catch((error) => console.error("❌ MongoDB connection error:", error));
 // Complaint Schema
 const complaintSchema = new mongoose.Schema({
   title: { type: String, trim: true },
@@ -176,7 +175,7 @@ const LoginHandler = async (data, res) => {
 };
 
 // Complaint Handler
-const complaintHandle = async (data) => {
+const postComplaintHandler = async (data) => {
   try {
     const newComplaint = new Complaint(data);
     const result = await newComplaint.save();
@@ -186,5 +185,15 @@ const complaintHandle = async (data) => {
     throw error;
   }
 };
+// get all complaint 
+const getAllComplaintHandler = async () => {
+  try {
+    const complaints = await Complaint.find();
+    return { message: "Successfully fetched complaints", complaints };
+  } catch (error) {
+    console.error("Error fetching complaints:", error);
+    throw error;
+  }
+};
 
-module.exports = { complaintHandle, LoginHandler, SignupHandler, driveHandler };
+module.exports = { postComplaintHandler, getAllComplaintHandler, LoginHandler, SignupHandler, driveHandler };
