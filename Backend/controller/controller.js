@@ -1,6 +1,7 @@
 const express = require("express");
 const {
-  complaintHandle,
+  postComplaintHandler,
+  getAllComplaintHandler,
   LoginHandler,
   SignupHandler,
   driveHandler,
@@ -25,9 +26,18 @@ const signup = async (req, res) => {
 };
 
 // Complaint
-const complaint = async (req, res) => {
+const postComplaint = async (req, res) => {
   try {
-    const result = await complaintHandle(req.body);
+    const result = await postComplaintHandler(req.body);
+    res.json(result);
+  } catch (err) {
+    console.error("Complaint Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+const getAllComplaint = async (req, res) => {
+  try {
+    const result = await getAllComplaintHandler(req.body);
     res.json(result);
   } catch (err) {
     console.error("Complaint Error:", err);
@@ -61,7 +71,8 @@ module.exports = {
   about,
   login,
   signup,
-  complaint,
+  getAllComplaint,
+  postComplaint,
   protectedRoute,
   logout,
   createDrive,
