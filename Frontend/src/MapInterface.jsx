@@ -10,6 +10,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import DraggablePin from "./DraggablePin";
 
 // Custom icons
 const createMarkerIcon = (iconUrl) =>
@@ -71,6 +72,8 @@ const MapInterface = () => {
   const [selectedDrive, setSelectedDrive] = useState(null);
   const [isCreateDriveModalOpen, setIsCreateDriveModalOpen] = useState(false);
   const [isJoinDriveModalOpen, setIsJoinDriveModalOpen] = useState(false);
+  const [isSettingLocation, setIsSettingLocation] = useState(false);
+  const [tempPinPosition, setTempPinPosition] = useState(null);
 
   // Join Drive Form State
   const [joinDriveForm, setJoinDriveForm] = useState({
@@ -90,6 +93,7 @@ const MapInterface = () => {
     startedBy: localStorage.getItem("username") || "Anonymous",
     abstract: "",
     username: localStorage.getItem("username"),
+    position: null, // <-- New field for latlng
   });
 
   useEffect(() => {
@@ -157,8 +161,8 @@ const MapInterface = () => {
 
     const newDrive = {
       ...createDriveForm,
-      id: markersData.length + 1,
-      position: drivePosition,
+      id: Date.now(), // Ensures unique key
+      position: createDriveForm.position || drivePosition,
       startedBy: localStorage.getItem("username") || "Anonymous",
       objective:
         createDriveForm.icon === "dustbin"
@@ -232,6 +236,7 @@ const MapInterface = () => {
         center={[28.63411214313142, 77.44750751746051]}
         zoom={13}
         className="w-full h-full z-10"
+        style={{ height: isCreateDriveModalOpen ? '80vh' : '100vh' }}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -241,6 +246,22 @@ const MapInterface = () => {
           defaultLocation={{ lat: 28.63411214313142, lng: 77.44750751746051 }}
           onLocationFound={handleLocationFound}
         />
+        {isSettingLocation && (
+          <DraggablePin
+            position={tempPinPosition || userLocation}
+            setPinPosition={(latlng, confirm) => {
+              if (confirm) {
+                setCreateDriveForm((prev) => ({
+                  ...prev,
+                  position: [latlng.lat, latlng.lng],
+                }));
+                setIsSettingLocation(false);
+              } else {
+                setTempPinPosition(latlng);
+              }
+            }}
+          />
+        )}
         {markersData.map((marker) => (
           <Marker
             key={marker.id}
@@ -358,7 +379,7 @@ const MapInterface = () => {
       )}
 
       {/* Create Drive Modal */}
-      {isCreateDriveModalOpen && (
+      {isCreateDriveModalOpen && !isSettingLocation && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg w-96 max-w-full m-4 shadow-xl">
             <h2 className="text-2xl mb-4 text-green-800 font-semibold">
@@ -401,6 +422,38 @@ const MapInterface = () => {
                   required
                   placeholder="Enter drive location"
                 />
+                <button
+                  type="button"
+                  className="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                  onClick={() => {
+                    setIsSettingLocation(true);
+                    setTempPinPosition(userLocation);
+                  }}
+                >
+                  Set Location on Map
+                </button>
+                {createDriveForm.position && (
+                  <div className="mt-2 text-xs text-green-700">
+                    Selected: Lat {createDriveForm.position[0].toFixed(5)}, Lng {createDriveForm.position[1].toFixed(5)}
+                  </div>
+                )}
+                {isSettingLocation && (
+                  <div className="mt-2 text-xs text-blue-700">Drag the pin on the map to set location, then click "Confirm Location"</div>
+                )}
+                {/* Confirm button moved to pin popup */}
+                {/* <button
+                  type="button"
+                  className="mt-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+                  onClick={() => {
+                    setCreateDriveForm((prev) => ({
+                      ...prev,
+                      position: [tempPinPosition.lat, tempPinPosition.lng],
+                    }));
+                    setIsSettingLocation(false);
+                  }}
+                >
+                  Confirm Location
+                </button> */}
               </div>
               <div>
                 <label className="block mb-2 text-sm font-medium">Date</label>
