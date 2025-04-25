@@ -168,36 +168,47 @@ const MapInterface = () => {
           : "Tree Plantation Drive",
     };
 
-    try {
-      const response = await fetch("http://localhost:5000/api/createdrive", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newDrive),
-      });
+    // Mock API: Directly add to initialMarkersData and state
+    // const response = await fetch("http://localhost:5000/api/createdrive", {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify(newDrive),
+    // });
 
-      if (response.ok) {
-        setMarkersData((prev) => [...prev, newDrive]);
-        setIsCreateDriveModalOpen(false);
-        // Reset form
-        setCreateDriveForm({
-          icon: "dustbin",
-          location: "",
-          date: "",
-          time: "",
-          objective: "",
-          startedBy: localStorage.getItem("username") || "Anonymous",
-          abstract: "",
-        });
-        alert("Drive successfully created!");
-      } else {
-        alert("Failed to create drive. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error creating drive:", error);
-      alert("Failed to create the drive.");
-    }
+    // Add to mock array
+    initialMarkersData.push(newDrive);
+    setMarkersData((prev) => [...prev, newDrive]);
+    setIsCreateDriveModalOpen(false);
+    // Reset form
+    setCreateDriveForm({
+      icon: "dustbin",
+      location: "",
+      date: "",
+      time: "",
+      objective: "",
+      startedBy: localStorage.getItem("username") || "Anonymous",
+      abstract: "",
+    });
+    alert("Drive successfully created!");
+    // if (response.ok) {
+    //   setMarkersData((prev) => [...prev, newDrive]);
+    //   setIsCreateDriveModalOpen(false);
+    //   // Reset form
+    //   setCreateDriveForm({
+    //     icon: "dustbin",
+    //     location: "",
+    //     date: "",
+    //     time: "",
+    //     objective: "",
+    //     startedBy: localStorage.getItem("username") || "Anonymous",
+    //     abstract: "",
+    //   });
+    //   alert("Drive successfully created!");
+    // } else {
+    //   alert("Failed to create drive. Please try again.");
+    // }
   };
 
   return (
