@@ -100,8 +100,18 @@ const MapInterface = () => {
     // Fetch markers data from backend or mock data
     const fetchMarkers = async () => {
       try {
-        const data = initialMarkersData; // Mock data for now
+        // Try to load from localStorage first
+        const stored = localStorage.getItem("markersData");
+        let data = initialMarkersData;
+        if (stored) {
+          try {
+            data = JSON.parse(stored);
+          } catch (err) {
+            data = initialMarkersData;
+          }
+        }
         setMarkersData(data);
+        localStorage.setItem("markersData", JSON.stringify(data));
       } catch (error) {
         console.error("Error fetching markers data:", error);
       }
@@ -182,8 +192,12 @@ const MapInterface = () => {
     // });
 
     // Add to mock array
-    initialMarkersData.push(newDrive);
-    setMarkersData((prev) => [...prev, newDrive]);
+    let updated;
+    setMarkersData((prev) => {
+      updated = [...prev, newDrive];
+      localStorage.setItem("markersData", JSON.stringify(updated));
+      return updated;
+    });
     setIsCreateDriveModalOpen(false);
     // Reset form
     setCreateDriveForm({
