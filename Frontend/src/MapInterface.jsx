@@ -85,6 +85,7 @@ const MapInterface = () => {
     icon: "dustbin",
     location: "",
     date: "",
+    time: "",
     objective: "",
     startedBy: localStorage.getItem("username") || "Anonymous",
     abstract: "",
@@ -183,6 +184,7 @@ const MapInterface = () => {
         setCreateDriveForm({
           icon: "dustbin",
           location: "",
+          date: "",
           time: "",
           objective: "",
           startedBy: localStorage.getItem("username") || "Anonymous",
@@ -242,6 +244,9 @@ const MapInterface = () => {
                 <div className="text-sm space-y-1 mb-3">
                   <p>
                     <strong>Location:</strong> {marker.location}
+                  </p>
+                  <p>
+                    <strong>Date:</strong> {marker.date}
                   </p>
                   <p>
                     <strong>Time:</strong> {marker.time}
@@ -394,6 +399,21 @@ const MapInterface = () => {
                   onChange={(e) =>
                     setCreateDriveForm((prev) => ({
                       ...prev,
+                      date: e.target.value,
+                    }))
+                  }
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500 transition-all"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-2 text-sm font-medium">Time</label>
+                <input
+                  type="time"
+                  value={createDriveForm.time}
+                  onChange={(e) =>
+                    setCreateDriveForm((prev) => ({
+                      ...prev,
                       time: e.target.value,
                     }))
                   }
@@ -451,7 +471,8 @@ const initialMarkersData = [
     position: [28.5355, 77.391], // Noida
     icon: "dustbin",
     location: "Sector 62, Noida",
-    time: "10:00 AM",
+    date: "2025-04-26",
+    time: "10:00",
     objective: "Cleanliness Drive",
     startedBy: "Noida Residents Welfare",
     abstract:
@@ -462,7 +483,8 @@ const initialMarkersData = [
     position: [28.6692, 77.4538], // Ghaziabad
     icon: "tshirt",
     location: "Indirapuram, Ghaziabad",
-    time: "12:00 PM",
+    date: "2025-04-27",
+    time: "12:30",
     objective: "Clothing Donation Drive",
     startedBy: "Youth Community Group",
     abstract: "Collecting gently used clothes for underprivileged families.",
@@ -472,7 +494,8 @@ const initialMarkersData = [
     position: [28.6817, 77.3637], // Another Ghaziabad location
     icon: "plant",
     location: "Vasundhara, Ghaziabad",
-    time: "8:00 AM",
+    date: "2025-04-28",
+    time: "08:00",
     objective: "Urban Plantation Drive",
     startedBy: "Green NCR Initiative",
     abstract: "Planting trees and creating green spaces in urban areas.",
