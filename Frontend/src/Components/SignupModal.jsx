@@ -48,9 +48,12 @@ const SignupModal = ({ isOpen, onClose, onSignup }) => {
       if (response.ok) {
         // Successful signup
         onSignup(data.user);
+        if (data.email) {
+          localStorage.setItem("email", data.email);
+        }
+        localStorage.setItem("username", data.user);
         onClose();
         navigate("/");
-        localStorage.setItem("username", data.user);
       } else {
         // Handle signup error
         setError(data.message || "Signup failed");

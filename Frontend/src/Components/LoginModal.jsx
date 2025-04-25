@@ -37,6 +37,11 @@ const LoginModal = ({ isOpen, onClose, onLogin }) => {
         // Successful login
         onLogin(data.user);
         localStorage.setItem("username", data.user);
+        if (data.email) {
+          localStorage.setItem("email", data.email);
+        } else if (email) {
+          localStorage.setItem("email", email);
+        }
         onClose();
         navigate("/");
       } else {

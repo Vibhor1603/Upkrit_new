@@ -132,8 +132,41 @@ const MapInterface = () => {
     setIsJoinDriveModalOpen(true);
   };
 
+  const saveJoinedDrive = (drive, user) => {
+    const stored = localStorage.getItem("joinedDrives");
+    let joined = [];
+    if (stored) {
+      try {
+        joined = JSON.parse(stored);
+      } catch {
+        joined = [];
+      }
+    }
+    // Avoid duplicate join
+    if (!joined.find(j => j.id === drive.id && j.username === user)) {
+      joined.push({ ...drive, username: user });
+      localStorage.setItem("joinedDrives", JSON.stringify(joined));
+    }
+  };
+
   const handleJoinDriveSubmit = async (e) => {
     e.preventDefault();
+    const user = localStorage.getItem("username") || "Anonymous";
+    // MOCK join: save in localStorage
+    if (selectedDrive) {
+      saveJoinedDrive(selectedDrive, user);
+      alert("Successfully joined the drive! (mock)");
+      setIsJoinDriveModalOpen(false);
+      setSelectedDrive(null);
+      setJoinDriveForm({
+        name: "",
+        email: "",
+        contact: "",
+        driveId: "",
+      });
+      return;
+    }
+    // --- REAL API CODE BELOW (unchanged, but will not run due to early return) ---
     try {
       const response = await fetch("http://localhost:5000/api/joindrive", {
         method: "POST",
@@ -142,12 +175,10 @@ const MapInterface = () => {
         },
         body: JSON.stringify(joinDriveForm),
       });
-
       if (response.ok) {
         alert("Successfully joined the drive!");
         setIsJoinDriveModalOpen(false);
         setSelectedDrive(null);
-        // Reset form
         setJoinDriveForm({
           name: "",
           email: "",
