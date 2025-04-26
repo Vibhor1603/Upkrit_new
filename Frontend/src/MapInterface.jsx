@@ -11,6 +11,22 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import DraggablePin from "./DraggablePin";
+import {
+  MapPin,
+  Calendar,
+  Clock,
+  User,
+  Send,
+  Trash,
+  PlusCircle,
+  Users,
+  Layers,
+  Trash2,
+  Info,
+  Map,
+  Navigation,
+  Crosshair,
+} from "lucide-react";
 
 // Custom icons
 const createMarkerIcon = (iconUrl) =>
@@ -58,7 +74,11 @@ const LocationMarker = ({ defaultLocation, onLocationFound }) => {
 
   return position === null ? null : (
     <Marker position={position} icon={markerIcons.user}>
-      <Popup>Your Location</Popup>
+      <Popup className="custom-popup">
+        <div className="p-2 text-center">
+          <span className="font-medium text-green-700">Your Location</span>
+        </div>
+      </Popup>
     </Marker>
   );
 };
@@ -74,6 +94,7 @@ const MapInterface = () => {
   const [isJoinDriveModalOpen, setIsJoinDriveModalOpen] = useState(false);
   const [isSettingLocation, setIsSettingLocation] = useState(false);
   const [tempPinPosition, setTempPinPosition] = useState(null);
+  const [filteredIcon, setFilteredIcon] = useState("all");
 
   // Join Drive Form State
   const [joinDriveForm, setJoinDriveForm] = useState({
@@ -143,7 +164,7 @@ const MapInterface = () => {
       }
     }
     // Avoid duplicate join
-    if (!joined.find(j => j.id === drive.id && j.username === user)) {
+    if (!joined.find((j) => j.id === drive.id && j.username === user)) {
       joined.push({ ...drive, username: user });
       localStorage.setItem("joinedDrives", JSON.stringify(joined));
     }
@@ -213,15 +234,6 @@ const MapInterface = () => {
           : "Tree Plantation Drive",
     };
 
-    // Mock API: Directly add to initialMarkersData and state
-    // const response = await fetch("http://localhost:5000/api/createdrive", {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify(newDrive),
-    // });
-
     // Add to mock array
     let updated;
     setMarkersData((prev) => {
@@ -239,58 +251,153 @@ const MapInterface = () => {
       objective: "",
       startedBy: localStorage.getItem("username") || "Anonymous",
       abstract: "",
+      position: null,
     });
-    alert("Drive successfully created!");
-    // if (response.ok) {
-    //   setMarkersData((prev) => [...prev, newDrive]);
-    //   setIsCreateDriveModalOpen(false);
-    //   // Reset form
-    //   setCreateDriveForm({
-    //     icon: "dustbin",
-    //     location: "",
-    //     date: "",
-    //     time: "",
-    //     objective: "",
-    //     startedBy: localStorage.getItem("username") || "Anonymous",
-    //     abstract: "",
-    //   });
-    //   alert("Drive successfully created!");
-    // } else {
-    //   alert("Failed to create drive. Please try again.");
-    // }
+
+    // Show success toast instead of alert
+    const successToast = document.createElement("div");
+    successToast.className =
+      "fixed bottom-4 right-4 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg z-50 animate-fade-in flex items-center";
+    successToast.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+      </svg>
+      Drive successfully created!
+    `;
+    document.body.appendChild(successToast);
+    setTimeout(() => {
+      successToast.classList.add("animate-fade-out");
+      setTimeout(() => document.body.removeChild(successToast), 500);
+    }, 3000);
   };
 
+  const filteredMarkers =
+    filteredIcon === "all"
+      ? markersData
+      : markersData.filter((marker) => marker.icon === filteredIcon);
+
   return (
-    <div className="w-full h-screen bg-gray-50 overflow-hidden">
-      <div className="absolute top-4 right-4 z-50 bg-white shadow-md rounded-lg p-4 mt-10">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-green-800">Community Drives</h2>
-          <button
-            onClick={() => setIsCreateDriveModalOpen(true)}
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors text-sm"
-          >
-            Create Drive
-          </button>
+    <div className="w-full h-screen bg-gray-50 overflow-hidden relative">
+      {/* Top Navigation Bar */}
+      <div className="fixed top-0 left-0 right-0 bg-white shadow-md px-4 py-3 z-20 flex justify-between items-center">
+        <div className="flex items-center space-x-2">
+          <div className="bg-green-500 rounded-full p-1">
+            <Map className="w-5 h-5 text-white" />
+          </div>
+          <span className="font-bold text-xl text-green-600">EcoDrive Map</span>
         </div>
-        <p className="text-sm text-gray-600">
-          Welcome, {localStorage.getItem("username") || "User"}
-        </p>
+
+        <div className="flex items-center space-x-3">
+          <span className="hidden md:inline-block text-sm text-gray-700">
+            Welcome, {localStorage.getItem("username") || "User"}
+          </span>
+          <div className="bg-green-100 rounded-full p-1">
+            <User className="w-5 h-5 text-green-600" />
+          </div>
+        </div>
       </div>
 
+      {/* Side Control Panel */}
+      <div className="fixed top-16 left-4 z-20 bg-white shadow-lg rounded-xl overflow-hidden max-w-xs w-64 transition-all duration-300">
+        <div className="p-4 bg-gradient-to-r from-green-500 to-green-600">
+          <h2 className="text-lg font-bold text-white flex items-center">
+            <Layers className="w-5 h-5 mr-2" />
+            Community Drives
+          </h2>
+        </div>
+
+        <div className="p-4 space-y-4">
+          {/* Filter Control */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-700">
+              Filter by type:
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setFilteredIcon("all")}
+                className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                  filteredIcon === "all"
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setFilteredIcon("dustbin")}
+                className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                  filteredIcon === "dustbin"
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                Cleanliness
+              </button>
+              <button
+                onClick={() => setFilteredIcon("tshirt")}
+                className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                  filteredIcon === "tshirt"
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                Clothing
+              </button>
+              <button
+                onClick={() => setFilteredIcon("plant")}
+                className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                  filteredIcon === "plant"
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                Plantation
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <h3 className="text-sm font-medium text-gray-700">
+                Active Drives:
+              </h3>
+              <span className="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                {filteredMarkers.length}
+              </span>
+            </div>
+
+            <div className="text-xs text-gray-500">
+              Click on a marker to view drive details
+            </div>
+          </div>
+
+          <button
+            onClick={() => setIsCreateDriveModalOpen(true)}
+            className="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center space-x-2 shadow-sm"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Create New Drive</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Map Container */}
       <MapContainer
         center={[28.63411214313142, 77.44750751746051]}
         zoom={13}
         className="w-full h-full z-10"
-        style={{ height: isCreateDriveModalOpen ? '80vh' : '100vh' }}
+        style={{ height: "100vh" }}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
+
         <LocationMarker
           defaultLocation={{ lat: 28.63411214313142, lng: 77.44750751746051 }}
           onLocationFound={handleLocationFound}
         />
+
         {isSettingLocation && (
           <DraggablePin
             position={tempPinPosition || userLocation}
@@ -307,37 +414,70 @@ const MapInterface = () => {
             }}
           />
         )}
-        {markersData.map((marker) => (
+
+        {filteredMarkers.map((marker) => (
           <Marker
             key={marker.id}
             position={marker.position}
             icon={markerIcons[marker.icon]}
           >
             <Popup className="custom-popup">
-              <div className="p-2">
-                <h3 className="text-lg font-bold text-green-800 mb-2">
-                  {marker.objective}
-                </h3>
-                <div className="text-sm space-y-1 mb-3">
-                  <p>
-                    <strong>Location:</strong> {marker.location}
-                  </p>
-                  <p>
-                    <strong>Date:</strong> {marker.date}
-                  </p>
-                  <p>
-                    <strong>Time:</strong> {marker.time}
-                  </p>
-                  <p>
-                    <strong>Started By:</strong> {marker.startedBy}
-                  </p>
-                  <p className="italic text-gray-600">{marker.abstract}</p>
+              <div className="p-3">
+                <div className="flex items-center space-x-2 mb-2">
+                  <div
+                    className={`p-1 rounded-full ${
+                      marker.icon === "dustbin"
+                        ? "bg-blue-100"
+                        : marker.icon === "tshirt"
+                        ? "bg-purple-100"
+                        : "bg-green-100"
+                    }`}
+                  >
+                    {marker.icon === "dustbin" ? (
+                      <Trash2 className="w-4 h-4 text-blue-600" />
+                    ) : marker.icon === "tshirt" ? (
+                      <Users className="w-4 h-4 text-purple-600" />
+                    ) : (
+                      <Info className="w-4 h-4 text-green-600" />
+                    )}
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-800">
+                    {marker.objective}
+                  </h3>
                 </div>
+
+                <div className="text-sm space-y-2 mb-3 bg-gray-50 p-2 rounded-lg">
+                  <div className="flex items-start">
+                    <MapPin className="w-4 h-4 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
+                    <p className="text-gray-700">{marker.location}</p>
+                  </div>
+
+                  <div className="flex items-center">
+                    <Calendar className="w-4 h-4 text-gray-500 mr-2 flex-shrink-0" />
+                    <p className="text-gray-700">{marker.date}</p>
+                  </div>
+
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 text-gray-500 mr-2 flex-shrink-0" />
+                    <p className="text-gray-700">{marker.time}</p>
+                  </div>
+
+                  <div className="flex items-center">
+                    <User className="w-4 h-4 text-gray-500 mr-2 flex-shrink-0" />
+                    <p className="text-gray-700">{marker.startedBy}</p>
+                  </div>
+                </div>
+
+                <p className="italic text-gray-600 text-sm bg-gray-50 p-2 rounded-lg mb-3">
+                  {marker.abstract}
+                </p>
+
                 <button
                   onClick={() => handleJoinClick(marker)}
-                  className="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors"
+                  className="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center space-x-2"
                 >
-                  Join Drive
+                  <Users className="w-4 h-4" />
+                  <span>Join Drive</span>
                 </button>
               </div>
             </Popup>
@@ -345,16 +485,35 @@ const MapInterface = () => {
         ))}
       </MapContainer>
 
+      {/* Floating Action Button - My Location */}
+      <button
+        className="fixed bottom-6 right-6 bg-white p-3 rounded-full shadow-lg z-20 hover:bg-gray-100 transition-colors"
+        onClick={() => {
+          // This would be implemented to center the map on user location
+          // But we'll leave it as visual only for now
+        }}
+      >
+        <Navigation className="w-6 h-6 text-green-600" />
+      </button>
+
       {/* Join Drive Modal */}
       {isJoinDriveModalOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg w-96 max-w-full m-4 shadow-xl">
-            <h2 className="text-2xl mb-4 text-green-800 font-semibold">
-              Join Drive
-            </h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-xl w-96 max-w-full m-4 shadow-2xl animate-fade-in">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-1">
+                Join Drive
+              </h2>
+              <p className="text-sm text-gray-500">
+                {selectedDrive?.objective} on {selectedDrive?.date}
+              </p>
+            </div>
+
             <form onSubmit={handleJoinDriveSubmit} className="space-y-4">
               <div>
-                <label className="block mb-2 text-sm font-medium">Name</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">
+                  Name
+                </label>
                 <input
                   type="text"
                   value={joinDriveForm.name}
@@ -364,13 +523,16 @@ const MapInterface = () => {
                       name: e.target.value,
                     }))
                   }
-                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500 transition-all"
+                  className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all outline-none"
                   required
                   placeholder="Enter your name"
                 />
               </div>
+
               <div>
-                <label className="block mb-2 text-sm font-medium">Email</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">
+                  Email
+                </label>
                 <input
                   type="email"
                   value={joinDriveForm.email}
@@ -380,13 +542,14 @@ const MapInterface = () => {
                       email: e.target.value,
                     }))
                   }
-                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500 transition-all"
+                  className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all outline-none"
                   required
                   placeholder="Enter your email"
                 />
               </div>
+
               <div>
-                <label className="block mb-2 text-sm font-medium">
+                <label className="block mb-1 text-sm font-medium text-gray-700">
                   Contact Number
                 </label>
                 <input
@@ -398,24 +561,26 @@ const MapInterface = () => {
                       contact: e.target.value,
                     }))
                   }
-                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500 transition-all"
+                  className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all outline-none"
                   required
                   placeholder="Enter your contact number"
                 />
               </div>
-              <div className="flex justify-between space-x-4">
-                <button
-                  type="submit"
-                  className="flex-grow bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                >
-                  Submit
-                </button>
+
+              <div className="flex justify-between space-x-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsJoinDriveModalOpen(false)}
-                  className="flex-grow bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+                  className="flex-grow bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-grow bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Submit</span>
                 </button>
               </div>
             </form>
@@ -425,33 +590,94 @@ const MapInterface = () => {
 
       {/* Create Drive Modal */}
       {isCreateDriveModalOpen && !isSettingLocation && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg w-96 max-w-full m-4 shadow-xl">
-            <h2 className="text-2xl mb-4 text-green-800 font-semibold">
-              Create New Drive
-            </h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-xl w-full max-w-md m-4 shadow-2xl animate-fade-in overflow-y-auto max-h-[90vh]">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-1">
+                Create New Drive
+              </h2>
+              <p className="text-sm text-gray-500">
+                Help organize community environmental efforts
+              </p>
+            </div>
+
             <form onSubmit={handleCreateDriveSubmit} className="space-y-4">
               <div>
-                <label className="block mb-2 text-sm font-medium">
+                <label className="block mb-1 text-sm font-medium text-gray-700">
                   Drive Type
                 </label>
-                <select
-                  value={createDriveForm.icon}
-                  onChange={(e) =>
-                    setCreateDriveForm((prev) => ({
-                      ...prev,
-                      icon: e.target.value,
-                    }))
-                  }
-                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500 transition-all"
-                >
-                  <option value="dustbin">Cleanliness Drive</option>
-                  <option value="tshirt">Clothing Donation Drive</option>
-                  <option value="plant">Tree Plantation Drive</option>
-                </select>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCreateDriveForm((prev) => ({
+                        ...prev,
+                        icon: "dustbin",
+                      }))
+                    }
+                    className={`p-2 border rounded-lg flex flex-col items-center justify-center text-xs ${
+                      createDriveForm.icon === "dustbin"
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Trash2
+                      className={`w-5 h-5 mb-1 ${
+                        createDriveForm.icon === "dustbin"
+                          ? "text-blue-500"
+                          : "text-gray-400"
+                      }`}
+                    />
+                    <span>Cleanliness</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCreateDriveForm((prev) => ({
+                        ...prev,
+                        icon: "tshirt",
+                      }))
+                    }
+                    className={`p-2 border rounded-lg flex flex-col items-center justify-center text-xs ${
+                      createDriveForm.icon === "tshirt"
+                        ? "border-purple-500 bg-purple-50 text-purple-700"
+                        : "border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Users
+                      className={`w-5 h-5 mb-1 ${
+                        createDriveForm.icon === "tshirt"
+                          ? "text-purple-500"
+                          : "text-gray-400"
+                      }`}
+                    />
+                    <span>Clothing</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCreateDriveForm((prev) => ({ ...prev, icon: "plant" }))
+                    }
+                    className={`p-2 border rounded-lg flex flex-col items-center justify-center text-xs ${
+                      createDriveForm.icon === "plant"
+                        ? "border-green-500 bg-green-50 text-green-700"
+                        : "border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Info
+                      className={`w-5 h-5 mb-1 ${
+                        createDriveForm.icon === "plant"
+                          ? "text-green-500"
+                          : "text-gray-400"
+                      }`}
+                    />
+                    <span>Plantation</span>
+                  </button>
+                </div>
               </div>
+
               <div>
-                <label className="block mb-2 text-sm font-medium">
+                <label className="block mb-1 text-sm font-medium text-gray-700">
                   Location
                 </label>
                 <input
@@ -463,76 +689,76 @@ const MapInterface = () => {
                       location: e.target.value,
                     }))
                   }
-                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500 transition-all"
+                  className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all outline-none"
                   required
                   placeholder="Enter drive location"
                 />
+
                 <button
                   type="button"
-                  className="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                  className="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm flex items-center space-x-1"
                   onClick={() => {
                     setIsSettingLocation(true);
                     setTempPinPosition(userLocation);
+                    setIsCreateDriveModalOpen(false);
                   }}
                 >
-                  Set Location on Map
+                  <Crosshair className="w-4 h-4" />
+                  <span>Set Location on Map</span>
                 </button>
+
                 {createDriveForm.position && (
-                  <div className="mt-2 text-xs text-green-700">
-                    Selected: Lat {createDriveForm.position[0].toFixed(5)}, Lng {createDriveForm.position[1].toFixed(5)}
+                  <div className="mt-2 text-xs bg-green-50 text-green-700 p-2 rounded-lg flex items-center">
+                    <MapPin className="w-4 h-4 mr-1" />
+                    <span>
+                      Location set: Lat {createDriveForm.position[0].toFixed(5)}
+                      , Lng {createDriveForm.position[1].toFixed(5)}
+                    </span>
                   </div>
                 )}
-                {isSettingLocation && (
-                  <div className="mt-2 text-xs text-blue-700">Drag the pin on the map to set location, then click "Confirm Location"</div>
-                )}
-                {/* Confirm button moved to pin popup */}
-                {/* <button
-                  type="button"
-                  className="mt-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
-                  onClick={() => {
-                    setCreateDriveForm((prev) => ({
-                      ...prev,
-                      position: [tempPinPosition.lat, tempPinPosition.lng],
-                    }));
-                    setIsSettingLocation(false);
-                  }}
-                >
-                  Confirm Location
-                </button> */}
               </div>
-              <div>
-                <label className="block mb-2 text-sm font-medium">Date</label>
-                <input
-                  type="date"
-                  value={createDriveForm.date}
-                  onChange={(e) =>
-                    setCreateDriveForm((prev) => ({
-                      ...prev,
-                      date: e.target.value,
-                    }))
-                  }
-                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500 transition-all"
-                  required
-                />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={createDriveForm.date}
+                    onChange={(e) =>
+                      setCreateDriveForm((prev) => ({
+                        ...prev,
+                        date: e.target.value,
+                      }))
+                    }
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    Time
+                  </label>
+                  <input
+                    type="time"
+                    value={createDriveForm.time}
+                    onChange={(e) =>
+                      setCreateDriveForm((prev) => ({
+                        ...prev,
+                        time: e.target.value,
+                      }))
+                    }
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all outline-none"
+                    required
+                  />
+                </div>
               </div>
+
               <div>
-                <label className="block mb-2 text-sm font-medium">Time</label>
-                <input
-                  type="time"
-                  value={createDriveForm.time}
-                  onChange={(e) =>
-                    setCreateDriveForm((prev) => ({
-                      ...prev,
-                      time: e.target.value,
-                    }))
-                  }
-                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500 transition-all"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-sm font-medium">
-                  Abstract
+                <label className="block mb-1 text-sm font-medium text-gray-700">
+                  Description
                 </label>
                 <textarea
                   value={createDriveForm.abstract}
@@ -542,71 +768,114 @@ const MapInterface = () => {
                       abstract: e.target.value,
                     }))
                   }
-                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500 transition-all"
+                  className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all outline-none"
                   required
                   placeholder="Provide a brief description of the drive"
                   rows="3"
                 />
               </div>
-              <div className="flex justify-between space-x-4">
-                <button
-                  type="submit"
-                  className="flex-grow bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                >
-                  Create Drive
-                </button>
+
+              <div className="flex justify-between space-x-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsCreateDriveModalOpen(false)}
-                  className="flex-grow bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+                  className="flex-grow bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-grow bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>Create Drive</span>
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* Pin Placement UI - shown when setting location on map */}
+      {isSettingLocation && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white px-4 py-3 rounded-lg shadow-lg z-30 w-72 text-center">
+          <h3 className="font-medium text-gray-800 mb-2">Set Drive Location</h3>
+          <p className="text-sm text-gray-600 mb-3">
+            Drag the pin to your desired location
+          </p>
+          <div className="flex justify-between space-x-3">
+            <button
+              className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+              onClick={() => {
+                setIsSettingLocation(false);
+                setIsCreateDriveModalOpen(true);
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              className="flex-1 bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 transition-colors text-sm"
+              onClick={() => {
+                // We'll use the current tempPinPosition to finalize the location
+                if (tempPinPosition) {
+                  setCreateDriveForm((prev) => ({
+                    ...prev,
+                    position: [tempPinPosition.lat, tempPinPosition.lng],
+                  }));
+                }
+                setIsSettingLocation(false);
+                setIsCreateDriveModalOpen(true);
+              }}
+            >
+              Confirm Location
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Initial mock data */}
     </div>
   );
 };
 
-export default MapInterface;
-
-// Mock markers data remains the same as in the previous version
+// Sample marker data
 const initialMarkersData = [
   {
     id: 1,
-    position: [28.5355, 77.391], // Noida
     icon: "dustbin",
-    location: "Sector 62, Noida",
-    date: "2025-04-26",
-    time: "10:00",
+    position: [28.6352, 77.2217], // New Delhi
+    location: "Connaught Place, New Delhi",
+    date: "2025-05-15",
+    time: "09:00",
     objective: "Cleanliness Drive",
-    startedBy: "Noida Residents Welfare",
+    startedBy: "EcoClub Delhi",
     abstract:
-      "Cleaning up public spaces and raising awareness about waste management.",
+      "Join us for a community cleanliness drive to clean up the streets around Connaught Place. Bring gloves and water.",
   },
   {
     id: 2,
-    position: [28.6692, 77.4538], // Ghaziabad
     icon: "tshirt",
-    location: "Indirapuram, Ghaziabad",
-    date: "2025-04-27",
-    time: "12:30",
+    position: [28.5355, 77.391], // Noida
+    location: "Sector 18, Noida",
+    date: "2025-05-22",
+    time: "14:00",
     objective: "Clothing Donation Drive",
-    startedBy: "Youth Community Group",
-    abstract: "Collecting gently used clothes for underprivileged families.",
+    startedBy: "Help Foundation",
+    abstract:
+      "Donate your unused clothes to those in need. Collection point at Sector 18 market.",
   },
   {
     id: 3,
-    position: [28.6817, 77.3637], // Another Ghaziabad location
     icon: "plant",
-    location: "Vasundhara, Ghaziabad",
-    date: "2025-04-28",
-    time: "08:00",
-    objective: "Urban Plantation Drive",
-    startedBy: "Green NCR Initiative",
-    abstract: "Planting trees and creating green spaces in urban areas.",
+    position: [28.4595, 77.0266], // Gurugram
+    location: "Biodiversity Park, Gurugram",
+    date: "2025-05-30",
+    time: "07:30",
+    objective: "Tree Plantation Drive",
+    startedBy: "Green Earth Society",
+    abstract:
+      "Let's make Gurugram greener! Our target is to plant 500 native tree species in the biodiversity park.",
   },
 ];
+
+export default MapInterface;

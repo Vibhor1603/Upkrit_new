@@ -37,6 +37,10 @@ const LoginModal = ({ isOpen, onClose, onLogin }) => {
         // Successful login
         onLogin(data.user);
         localStorage.setItem("username", data.user);
+        // Store user ID in localStorage
+        if (data.userId) {
+          localStorage.setItem("userId", data.userId);
+        }
         if (data.email) {
           localStorage.setItem("email", data.email);
         } else if (email) {
