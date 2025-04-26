@@ -10,6 +10,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import DraggablePin from "./DraggablePin";
 
 // Custom icons
 const createMarkerIcon = (iconUrl) =>
@@ -71,6 +72,8 @@ const MapInterface = () => {
   const [selectedDrive, setSelectedDrive] = useState(null);
   const [isCreateDriveModalOpen, setIsCreateDriveModalOpen] = useState(false);
   const [isJoinDriveModalOpen, setIsJoinDriveModalOpen] = useState(false);
+  const [isSettingLocation, setIsSettingLocation] = useState(false);
+  const [tempPinPosition, setTempPinPosition] = useState(null);
 
   // Join Drive Form State
   const [joinDriveForm, setJoinDriveForm] = useState({
@@ -85,18 +88,30 @@ const MapInterface = () => {
     icon: "dustbin",
     location: "",
     date: "",
+    time: "",
     objective: "",
     startedBy: localStorage.getItem("username") || "Anonymous",
     abstract: "",
     username: localStorage.getItem("username"),
+    position: null, // <-- New field for latlng
   });
 
   useEffect(() => {
     // Fetch markers data from backend or mock data
     const fetchMarkers = async () => {
       try {
-        const data = initialMarkersData; // Mock data for now
+        // Try to load from localStorage first
+        const stored = localStorage.getItem("markersData");
+        let data = initialMarkersData;
+        if (stored) {
+          try {
+            data = JSON.parse(stored);
+          } catch (err) {
+            data = initialMarkersData;
+          }
+        }
         setMarkersData(data);
+        localStorage.setItem("markersData", JSON.stringify(data));
       } catch (error) {
         console.error("Error fetching markers data:", error);
       }
@@ -117,8 +132,41 @@ const MapInterface = () => {
     setIsJoinDriveModalOpen(true);
   };
 
+  const saveJoinedDrive = (drive, user) => {
+    const stored = localStorage.getItem("joinedDrives");
+    let joined = [];
+    if (stored) {
+      try {
+        joined = JSON.parse(stored);
+      } catch {
+        joined = [];
+      }
+    }
+    // Avoid duplicate join
+    if (!joined.find(j => j.id === drive.id && j.username === user)) {
+      joined.push({ ...drive, username: user });
+      localStorage.setItem("joinedDrives", JSON.stringify(joined));
+    }
+  };
+
   const handleJoinDriveSubmit = async (e) => {
     e.preventDefault();
+    const user = localStorage.getItem("username") || "Anonymous";
+    // MOCK join: save in localStorage
+    if (selectedDrive) {
+      saveJoinedDrive(selectedDrive, user);
+      alert("Successfully joined the drive! (mock)");
+      setIsJoinDriveModalOpen(false);
+      setSelectedDrive(null);
+      setJoinDriveForm({
+        name: "",
+        email: "",
+        contact: "",
+        driveId: "",
+      });
+      return;
+    }
+    // --- REAL API CODE BELOW (unchanged, but will not run due to early return) ---
     try {
       const response = await fetch("http://localhost:5000/api/joindrive", {
         method: "POST",
@@ -127,12 +175,10 @@ const MapInterface = () => {
         },
         body: JSON.stringify(joinDriveForm),
       });
-
       if (response.ok) {
         alert("Successfully joined the drive!");
         setIsJoinDriveModalOpen(false);
         setSelectedDrive(null);
-        // Reset form
         setJoinDriveForm({
           name: "",
           email: "",
@@ -156,8 +202,8 @@ const MapInterface = () => {
 
     const newDrive = {
       ...createDriveForm,
-      id: markersData.length + 1,
-      position: drivePosition,
+      id: Date.now(), // Ensures unique key
+      position: createDriveForm.position || drivePosition,
       startedBy: localStorage.getItem("username") || "Anonymous",
       objective:
         createDriveForm.icon === "dustbin"
@@ -167,35 +213,51 @@ const MapInterface = () => {
           : "Tree Plantation Drive",
     };
 
-    try {
-      const response = await fetch("http://localhost:5000/api/createdrive", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newDrive),
-      });
+    // Mock API: Directly add to initialMarkersData and state
+    // const response = await fetch("http://localhost:5000/api/createdrive", {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify(newDrive),
+    // });
 
-      if (response.ok) {
-        setMarkersData((prev) => [...prev, newDrive]);
-        setIsCreateDriveModalOpen(false);
-        // Reset form
-        setCreateDriveForm({
-          icon: "dustbin",
-          location: "",
-          time: "",
-          objective: "",
-          startedBy: localStorage.getItem("username") || "Anonymous",
-          abstract: "",
-        });
-        alert("Drive successfully created!");
-      } else {
-        alert("Failed to create drive. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error creating drive:", error);
-      alert("Failed to create the drive.");
-    }
+    // Add to mock array
+    let updated;
+    setMarkersData((prev) => {
+      updated = [...prev, newDrive];
+      localStorage.setItem("markersData", JSON.stringify(updated));
+      return updated;
+    });
+    setIsCreateDriveModalOpen(false);
+    // Reset form
+    setCreateDriveForm({
+      icon: "dustbin",
+      location: "",
+      date: "",
+      time: "",
+      objective: "",
+      startedBy: localStorage.getItem("username") || "Anonymous",
+      abstract: "",
+    });
+    alert("Drive successfully created!");
+    // if (response.ok) {
+    //   setMarkersData((prev) => [...prev, newDrive]);
+    //   setIsCreateDriveModalOpen(false);
+    //   // Reset form
+    //   setCreateDriveForm({
+    //     icon: "dustbin",
+    //     location: "",
+    //     date: "",
+    //     time: "",
+    //     objective: "",
+    //     startedBy: localStorage.getItem("username") || "Anonymous",
+    //     abstract: "",
+    //   });
+    //   alert("Drive successfully created!");
+    // } else {
+    //   alert("Failed to create drive. Please try again.");
+    // }
   };
 
   return (
@@ -219,6 +281,7 @@ const MapInterface = () => {
         center={[28.63411214313142, 77.44750751746051]}
         zoom={13}
         className="w-full h-full z-10"
+        style={{ height: isCreateDriveModalOpen ? '80vh' : '100vh' }}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -228,6 +291,22 @@ const MapInterface = () => {
           defaultLocation={{ lat: 28.63411214313142, lng: 77.44750751746051 }}
           onLocationFound={handleLocationFound}
         />
+        {isSettingLocation && (
+          <DraggablePin
+            position={tempPinPosition || userLocation}
+            setPinPosition={(latlng, confirm) => {
+              if (confirm) {
+                setCreateDriveForm((prev) => ({
+                  ...prev,
+                  position: [latlng.lat, latlng.lng],
+                }));
+                setIsSettingLocation(false);
+              } else {
+                setTempPinPosition(latlng);
+              }
+            }}
+          />
+        )}
         {markersData.map((marker) => (
           <Marker
             key={marker.id}
@@ -242,6 +321,9 @@ const MapInterface = () => {
                 <div className="text-sm space-y-1 mb-3">
                   <p>
                     <strong>Location:</strong> {marker.location}
+                  </p>
+                  <p>
+                    <strong>Date:</strong> {marker.date}
                   </p>
                   <p>
                     <strong>Time:</strong> {marker.time}
@@ -342,7 +424,7 @@ const MapInterface = () => {
       )}
 
       {/* Create Drive Modal */}
-      {isCreateDriveModalOpen && (
+      {isCreateDriveModalOpen && !isSettingLocation && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg w-96 max-w-full m-4 shadow-xl">
             <h2 className="text-2xl mb-4 text-green-800 font-semibold">
@@ -385,12 +467,59 @@ const MapInterface = () => {
                   required
                   placeholder="Enter drive location"
                 />
+                <button
+                  type="button"
+                  className="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                  onClick={() => {
+                    setIsSettingLocation(true);
+                    setTempPinPosition(userLocation);
+                  }}
+                >
+                  Set Location on Map
+                </button>
+                {createDriveForm.position && (
+                  <div className="mt-2 text-xs text-green-700">
+                    Selected: Lat {createDriveForm.position[0].toFixed(5)}, Lng {createDriveForm.position[1].toFixed(5)}
+                  </div>
+                )}
+                {isSettingLocation && (
+                  <div className="mt-2 text-xs text-blue-700">Drag the pin on the map to set location, then click "Confirm Location"</div>
+                )}
+                {/* Confirm button moved to pin popup */}
+                {/* <button
+                  type="button"
+                  className="mt-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+                  onClick={() => {
+                    setCreateDriveForm((prev) => ({
+                      ...prev,
+                      position: [tempPinPosition.lat, tempPinPosition.lng],
+                    }));
+                    setIsSettingLocation(false);
+                  }}
+                >
+                  Confirm Location
+                </button> */}
               </div>
               <div>
                 <label className="block mb-2 text-sm font-medium">Date</label>
                 <input
                   type="date"
                   value={createDriveForm.date}
+                  onChange={(e) =>
+                    setCreateDriveForm((prev) => ({
+                      ...prev,
+                      date: e.target.value,
+                    }))
+                  }
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500 transition-all"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-2 text-sm font-medium">Time</label>
+                <input
+                  type="time"
+                  value={createDriveForm.time}
                   onChange={(e) =>
                     setCreateDriveForm((prev) => ({
                       ...prev,
@@ -451,7 +580,8 @@ const initialMarkersData = [
     position: [28.5355, 77.391], // Noida
     icon: "dustbin",
     location: "Sector 62, Noida",
-    time: "10:00 AM",
+    date: "2025-04-26",
+    time: "10:00",
     objective: "Cleanliness Drive",
     startedBy: "Noida Residents Welfare",
     abstract:
@@ -462,7 +592,8 @@ const initialMarkersData = [
     position: [28.6692, 77.4538], // Ghaziabad
     icon: "tshirt",
     location: "Indirapuram, Ghaziabad",
-    time: "12:00 PM",
+    date: "2025-04-27",
+    time: "12:30",
     objective: "Clothing Donation Drive",
     startedBy: "Youth Community Group",
     abstract: "Collecting gently used clothes for underprivileged families.",
@@ -472,7 +603,8 @@ const initialMarkersData = [
     position: [28.6817, 77.3637], // Another Ghaziabad location
     icon: "plant",
     location: "Vasundhara, Ghaziabad",
-    time: "8:00 AM",
+    date: "2025-04-28",
+    time: "08:00",
     objective: "Urban Plantation Drive",
     startedBy: "Green NCR Initiative",
     abstract: "Planting trees and creating green spaces in urban areas.",

@@ -109,6 +109,12 @@ const Navbar = ({ servicesRef, aboutRef, contactRef }) => {
                   >
                     Engage
                   </button>
+                  <button
+                    onClick={() => (window.location.href = "/active-drives")}
+                    className="hover:text-green-200 transition-colors text-sm"
+                  >
+                    Active Drives
+                  </button>
                   <span className="text-sm">
                     Welcome, {localStorage.getItem("username") || "User"}
                   </span>

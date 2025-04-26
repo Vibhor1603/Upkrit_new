@@ -8,6 +8,8 @@ import ComplaintForm from "./Components/ComplaintForm";
 import Contact from "./Components/Contact";
 import Footer from "./Components/Footer";
 import MapInterface from "./MapInterface";
+import Profile from "./Components/Profile";
+import ActiveDrives from "./Components/ActiveDrives";
 
 const App = () => {
   // Create refs for sections
@@ -58,6 +60,8 @@ const App = () => {
           />
           <Route path="/complaint" element={<ComplaintForm />} />
           <Route path="/drive" element={<MapInterface />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/active-drives" element={<ActiveDrives />} />
         </Routes>
 
         <Footer />

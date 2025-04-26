@@ -60,6 +60,23 @@ const ComplaintForm = () => {
 
       if (response.ok) {
         const result = await response.json();
+        // Save complaint in localStorage
+        const stored = localStorage.getItem("complaintsData");
+        let complaints = [];
+        if (stored) {
+          try {
+            complaints = JSON.parse(stored);
+          } catch (err) {
+            complaints = [];
+          }
+        }
+        const newComplaint = {
+          ...formData,
+          id: Date.now(),
+          username: localStorage.getItem("username") || "Anonymous",
+        };
+        complaints.push(newComplaint);
+        localStorage.setItem("complaintsData", JSON.stringify(complaints));
         console.log("Form submitted successfully:", result);
         setSubmissionStatus("success");
         setPreviewUrl(null);
