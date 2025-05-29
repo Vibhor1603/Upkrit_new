@@ -5,10 +5,13 @@ const jwt = require("jsonwebtoken");
 const JWT_SECRET = "your_secret_key"; // Use environment variables in production
 
 mongoose
-  .connect("mongodb://localhost:27017/UPKRIT", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(
+    "mongodb+srv://vibhorsharmak:Avishubhi1603@cluster0.ygkeq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
+  )
   .then(() => console.log("✅ MongoDB connected successfully"))
   .catch((error) => console.error("❌ MongoDB connection error:", error));
 
