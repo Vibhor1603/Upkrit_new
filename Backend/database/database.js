@@ -5,15 +5,20 @@ const jwt = require("jsonwebtoken");
 const JWT_SECRET = "your_secret_key"; // Use environment variables in production
 
 mongoose
-  .connect(
-    "mongodb+srv://vibhorsharmak:Avishubhi1603@cluster0.ygkeq.mongodb.net/UPKRIT?retryWrites=true&w=majority",
-    {}
-  )
-  .then(() => console.log("MongoDB connected successfully"))
-  .catch((error) => console.error("MongoDB connection error:", error));
-  
+  .connect("mongodb://localhost:27017/UPKRIT", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("✅ MongoDB connected successfully"))
+  .catch((error) => console.error("❌ MongoDB connection error:", error));
+
 // Complaint Schema
 const complaintSchema = new mongoose.Schema({
+  user_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Account",
+    required: true,
+  }, // Reference to Account schema
   title: { type: String, trim: true },
   type: { type: String, trim: true },
   description: { type: String, trim: true },
@@ -29,51 +34,56 @@ const AccountSchema = new mongoose.Schema({
   password: { type: String, required: true, trim: true },
 });
 
-// const DriveSchema = new mongoose.Schema({
-//   username: { type: String, required: true, trim: true },
-//   type: { type: String, required: true, trim: true },
-//   date: { type: Date },
-//   abstract: { type: String, required: true, trim: true },
-//   location: { type: String, required: true, trim: true },
-// });
+const DriveSchema = new mongoose.Schema({
+  user_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Account",
+    required: true,
+  }, // Reference to Account schema
+  type: { type: String, required: true, trim: true },
+  date: { type: Date },
+  abstract: { type: String, required: true, trim: true },
+  location: { type: String, required: true, trim: true },
+});
 
 // Models
 const Complaint = mongoose.model("Complaint", complaintSchema);
 const Account = mongoose.model("Account", AccountSchema);
+const Drive = mongoose.model("Drive", DriveSchema);
 
+// create drive handler
 const driveHandler = async (data, res) => {
   try {
     // Validate required fields
-    const { username, type, abstract, location } = data;
-    if (!username || !type || !abstract || !location) {
+    const { user_id, type, abstract, location } = data;
+    if (!user_id || !type || !abstract || !location) {
       return res.status(400).json({ message: "All fields are required" });
     }
-
     // Create a new Drive entry
-    const newDrive = new mongoose.model("Drive", DriveSchema)({
-      username: username.trim(),
-      type: type.trim(),
-      date: data.date || new Date(), // Use provided date or current date
-      abstract: abstract.trim(),
-      location: location.trim(),
-    });
-
+    const newDrive = new Drive(data);
     // Save the drive to the database
     const result = await newDrive.save();
 
     // Return success response
-    return res.status(201).json({
+    return res.status(200).json({
       message: "Drive added successfully",
       drive: result,
     });
   } catch (error) {
     console.error("Drive insertion error:", error);
-
     // Return error response
     return res.status(500).json({
       message: "Server issue while adding drive",
       error,
     });
+  }
+};
+//get all drive handler
+const getAllDrivesHandler = async () => {
+  try {
+    return await Drive.find().populate("user_id", "-password -__v");
+  } catch (error) {
+    console.error("Drive fetch error:", error);
   }
 };
 
@@ -179,14 +189,14 @@ const LoginHandler = async (data, res) => {
 const postComplaintHandler = async (data) => {
   try {
     const newComplaint = new Complaint(data);
-    const result = await newComplaint.save();
+    const result = await newComplaint.save(); //  ← Save to MongoDB (triggers collection creation if needed)
     return { message: "Successfully inserted data", result };
   } catch (error) {
     console.error("Error inserting data:", error);
     throw error;
   }
 };
-// get all complaint 
+// get all complaint
 const getAllComplaintHandler = async () => {
   try {
     const complaints = await Complaint.find();
@@ -196,5 +206,25 @@ const getAllComplaintHandler = async () => {
     throw error;
   }
 };
+//get complain of user
+const getComplaintsByUserIdHandler = async (userId) => {
+  try {
+    const complaints = await Complaint.find({ user_id: userId }).populate(
+      "user_id",
+      "-password -__v"
+    );
+    return complaints;
+  } catch (error) {
+    throw error;
+  }
+};
 
-module.exports = { postComplaintHandler, getAllComplaintHandler, LoginHandler, SignupHandler, driveHandler };
+module.exports = {
+  postComplaintHandler,
+  getAllComplaintHandler,
+  getComplaintsByUserIdHandler,
+  LoginHandler,
+  SignupHandler,
+  driveHandler,
+  getAllDrivesHandler,
+};

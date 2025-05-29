@@ -17,6 +17,15 @@ app.use(cookieParser());
 app.use("/api", router);
 
 app.use("/", router);
-app.listen(port, () => {
+
+const server = app.listen(port, () => {
   console.log(`server is running on port ${port}`);
+});
+
+process.on("SIGINT", () => {
+  console.log("Gracefully shutting down...");
+  server.close(() => {
+    console.log("Server shut down");
+    process.exit(0); // Ensure the process exits cleanly
+  });
 });
